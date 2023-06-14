@@ -5,6 +5,7 @@ WebConfig 에서
 @EnableWebMvc 어노테이션을 사용하려면
 
 ```java
+# src/main/java/ps/emams/config/WebConfig.java
 
 @Configuration
 //@EnableWebMvc
