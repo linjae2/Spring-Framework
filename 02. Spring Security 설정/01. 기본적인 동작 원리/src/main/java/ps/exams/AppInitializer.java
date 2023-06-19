@@ -18,6 +18,7 @@ public class AppInitializer implements WebApplicationInitializer {
         // Load Spring web application configuration
         AnnotationConfigWebApplicationContext rootContext = new AnnotationConfigWebApplicationContext();
         rootContext.register(RootConfig.class, SecurityConfig.class);
+        //rootContext.register(RootConfig.class);
         rootContext.refresh();
 
         servletContext.addListener(new ContextLoaderListener(rootContext));
