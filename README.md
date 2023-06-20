@@ -1,6 +1,22 @@
 # Spring-Framework
 어디까지 공부할수 있을까?
 
+## 2023.06.19
+- intellij 에서 프로젝트와 모듈의 관계.
+  
+```java
+import com.intellij.openapi.module.ModuleManager;
+...
+
+    for (Module module : ModuleManager.getInstance(myProject).getModules()) {
+      ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
+```
+
+- 플러그인 추출
+
+ Tasks:intellij:buildPlugin 을 실행하면 build/distributins/ 에 결과 파일 생성.
+
+ Install Plugin from Disk ... 을 통하여 설치합니다.
 
 
 ## 2023.06.19
