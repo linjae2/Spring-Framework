@@ -12,6 +12,28 @@
 | maven-resources-plugin       | 메이븐에 스프링 부트 애플리케애션의 빌드와 배포를 위한 스프링 전용 메이븐 플러그인 포함                                                     |
 
 
+### 우분투에서 intellij 설치
+
+```bash
+$> sudo snap install intellij-idea-community --classic
+$> sudo snap download intellij-idea-community
+```
+> ![img.png](.Docs/.res/download.intellij-idea-community.png)
+
+- [ ] snap 명령어
+```bash
+# 시스템에 설치된 스냅 요약을 표시
+$> snap list
+
+# 사용 중인 스탬의 현재 버전을 나열하려면 이름을 지정, --all 옵션을 추가하여 사용 가능한 것 나열
+$> snap list mailspring
+$> snap list --all mailspring
+
+# 스냅 업데이트 및 되돌리기
+$> sudo snap refresh mailspring
+$> sudo snap revert mailspring
+```
+
 ### MSA 에서의 트랙잭션
 
 #### 2 Phase Commit Protocol
