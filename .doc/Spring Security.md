@@ -1,6 +1,54 @@
 
- 
- 
+## Spring Security Architecture
+
+  * SecurityContextHolder
+  * SecurityContext
+  * Authentication
+    * Principal과 GrantAuthority 정보를 제공.
+    * Principal
+      * 인증된 사용자 정보 즉, "누구"에 해당하는 정보.
+      * UserDetailsService에서 리턴한 그 객체.
+      * 객체는 UserDetails 타임.
+        * UserDetails : 어플리케이션이 가지고 있는 유저 정보와 스프링 시큐리티가 사용하는 Authentication 객체 사이의 어댑터
+    * GrantAuthority
+      * "ROLE_USER", "ROLE_ADMIN"등 Principal이 가지고 있는 "권한"을 나타낸다.
+      * 인증 이후, 인가 및 권한 확인할 때 이 정보를 참조한다.
+
+### AuthenticationManagerBuilder
+
+  UserDetailsService의 구현클래스(AccountService)를 구현하고 SecurityConfig에서 명시적으로 아래와 같이 등록
+  ```java
+    AuthenticationManagerBuilder auth;
+    auth.userDetailsService(accountService);
+  ```
+  AccountService를 빈으로 등록만 해주면, 명시적으로 지정해주지 않아도 해당 빈을 사용하여 인증하도록 되어 있다.
+
+
+### AuthenticationManager
+
+스프링 시큐리티에서 인증(Authentication)은 AuthenticationManager가 한다.
+
+## 스프링 부트 시큐리티 자동 설정
+
+### UserDetailsServiceAutoConfiguration
+
+spring-boot-autoconfigure의 security 쪽 자동 설정 중 하나인 UserDetailsServiceAutoConfiguration는 UserDetailsManager를 만들어 랜덤하게 유저가 만드렁지게 된다.
+
+```java
+@AutoConfiguration
+@ConditionalOnClass(AuthenticationManager.class)
+@ConditionalOnBean(ObjectPostProcessor.class)
+@ConditionalOnMissingBean(
+		value = { AuthenticationManager.class, AuthenticationProvider.class, UserDetailsService.class,
+				AuthenticationManagerResolver.class },
+		type = { "org.springframework.security.oauth2.jwt.JwtDecoder",
+				"org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector",
+				"org.springframework.security.oauth2.client.registration.ClientRegistrationRepository",
+				"org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository" })
+public class UserDetailsServiceAutoConfiguration {
+```
+
+
 
 * SecurtityConfig 설정
 
@@ -8,6 +56,14 @@
   @Configuration
   @EnableWebSecurity // 웹보안 활성화를 위한 annotation
   public class SecurityConfig extends WebSecurityConfigurerAdapter {
+  
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+      // resources 모든 접근을 허용하는 설정을 해버리면
+      // HttpSecurity 설정한 ADIM권한을 가진 사용자만 resources 접근가능한 설정을 무시해버린다.
+      web.ignoring().antMatchers("/resources/**");
+    }
+  
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -19,7 +75,9 @@
   }
   ```
   - @EnableWebSecurity annotation을 WebSecurityConfigureAdapter를 상속하는 설정 객체에 붙혀주면 SpringSecurityFilterChain에 등록된다.
-    
+  
+  1. WebSecurity 설정
+  2. HttpSecurity 설정
 
 ### AuthenticationFilter 필터 리스트
 
@@ -70,6 +128,8 @@
   * 인증처리 필터(UsernamePasswordAuthenticationFilter)는 Form인증처리를 하는 필터로써 해당 필터는 크게 두가지로 인증 전과 후의 작업을 관리한다.  
     인증처리전에는 사용자 인증정보를 담아서 전달하면서 인증처리를 맡기고(AuthenticationManager) 성공한 인증객체를 반환받아서 (전역적으로 인증객체를 참조할 수 있도록 설계 된)SecurityContext에 저장하고, 그 이후 SuccessHandler를 통해 인증 성공후의 후속 작업들을 처리합니다.
 
+  * 사용자가 로그인 페이지에 접근해 로그인 요청을 하면 UsernamePasswordAuthenticationFilter에서 사용하는 AuthenticationProvider 구현체에서 UserDetailsService의 loadUserByUsername 메소드를 통해 로그인시 요청 받은 username을 통해 UserDetails 객체를 얻게 된다.
+
 ### LogoutFilter 란
 
 > LogoutFilter
@@ -78,19 +138,23 @@
 
   LogoutFilter의 필터 기능이 구현된 코드
   ```java
-  private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException{
-  if (this.requiresLogout(request, response)) {
-  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-  if (this.logger.isDebugEnabled()) {
-  this.logger.debug(LogMessage.format("Logging out [%s]", auth));
-  }
-
-            this.handler.logout(request, response, auth);
-            this.logoutSuccessHandler.onLogoutSuccess(request, response, auth);
-        } else {
-            chain.doFilter(request, response);
-        }
+  private void doFilter(
+          HttpServletRequest request
+        , HttpServletResponse response
+        , FilterChain chain
+        ) throws IOException, ServletException{
+    if (this.requiresLogout(request, response)) {
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+      if (this.logger.isDebugEnabled()) {
+        this.logger.debug(LogMessage.format("Logging out [%s]", auth));
+      }
+  
+      this.handler.logout(request, response, auth);
+      this.logoutSuccessHandler.onLogoutSuccess(request, response, auth);
+    } else {
+      chain.doFilter(request, response);
     }
+  }
   ```
 
 
